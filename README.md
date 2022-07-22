@@ -1,2 +1,1 @@
-# react-native-mail
- MailCore 2 wrapper for React Native
+in dev. unusable right now.
