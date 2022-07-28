@@ -29,7 +29,7 @@
   ],
   "scripts": {
     "compile": "rm -rf lib && tsc -p .",
-    "compile:WIN32": "shx rm -rf lib && tsc -p .",
+    "compile:win32": "shx rm -rf lib && npx tsc -p .",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "prepare": "yarn compile",
     "test": "jest"
