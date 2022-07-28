@@ -74,7 +74,7 @@ export enum MessageFlags {
     Submitted = 1 << 8
 }
 
-export interface MailUIDRange{
+export interface UIDRange{
     from: number,
     to: number
   }
@@ -121,4 +121,10 @@ export interface ServerConfiguration{
   connectiontype: ConnectionType
   authType: AuthType
   checkCertificate: boolean
+}
+
+export interface UserCredentials{
+    username: string
+    password: string
+    token: Nullable<string>
 }

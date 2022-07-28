@@ -1,103 +1,87 @@
 import * as React from 'react'
 import { NativeModules } from 'react-native'
-import { Attachment, Folder, Mail, MailHeader, MailUIDRange, ServerConfiguration } from './Types'
+import {Attachment, Folder, Mail, MailHeader, UIDRange, ServerConfiguration, UserCredentials, Nullable} from './Types'
 import { decode_imap_utf7 } from './utf7/utf7'
 
 const {RNMailModule} = NativeModules
 
-
-
-class Session{
-  private mServerConfig: ServerConfiguration
+class MailInstance{
+  private readonly mIMAPConfig: ServerConfiguration
+  private readonly mSMTPConfig: ServerConfiguration
+  private mUserCredentials: Nullable<UserCredentials> = null
   private mFolders: Folder[] = []
 
-
-  public constructor(serverConfig: ServerConfiguration){
-    this.mServerConfig = serverConfig;
-    RNMailModule.SetServerConfiguration(this.mServerConfig);
+  public constructor(imapCfg: ServerConfiguration, smtpCfg: ServerConfiguration) {
+    this.mIMAPConfig = imapCfg
+    this.mSMTPConfig = smtpCfg
   }
 
-  public SetServerConfiguration(config: ServerConfiguration): void{
-    this.mServerConfig = config;
-    RNMailModule.SetServerConfiguration(this.mServerConfig);
-  }
-
-  public FetchFolders(): Promise<Folder[]> {
-    return RNMailModule.GetFolders().then((result: Folder[])=>{
-      for(let folder of result) folder.name = decode_imap_utf7(folder.path);
-      this.mFolders = result;
-      return Promise.resolve(result);
+  public Login(creds: UserCredentials): Promise<boolean> {
+    this.mUserCredentials = creds
+    return RNMailModule.Login(creds).then(()=>{
+      return Promise.resolve(true)
     }).catch((error: any)=>{
       console.error(error)
-      return Promise.reject(error)
+      return Promise.resolve(false)
     })
   }
 
-  public get Folders() {return this.mFolders}
+  public FetchFolders(): Promise<Nullable<Folder[]>> {
+    return RNMailModule.GetMails().then((folders: Folder[])=>{
+      this.mFolders = folders
+      for(let folder of this.mFolders)
+        folder.name = decode_imap_utf7(folder.path)
+      return Promise.resolve(folders)
+    }).catch((error: any)=>{
+      console.error(error)
+      return Promise.resolve(null)
+    })
+  }
 
-  public GetMails(folder: Folder, range: MailUIDRange): Promise<MailHeader[]> {
-    return RNMailModule.GetMails(folder, range).then((result: MailHeader[])=>{
+  public GetFolders() : Promise<Nullable<Folder[]>> {
+    if(this.mFolders) return Promise.resolve(this.mFolders)
+    return this.GetFolders()
+  }
+
+
+  public CreateFolder(folderName: string): Promise<boolean> {
+    return RNMailModule.CreateFolder(folderName).then(()=>{
+      return this.FetchFolders().then(()=>{
+        return Promise.resolve(true)
+      })
+    }).catch((error: any)=>{
+      console.error(error)
+      return Promise.resolve(false)
+    })
+  }
+
+  public RenameFolder(folderName: string, folderNewName: string): Promise<boolean> {
+    return RNMailModule.RenameFolder({old: folderName, 'new': folderNewName}).then(()=>{
+      return this.FetchFolders().then(()=>{
+        return Promise.resolve(true)
+      })
+    }).catch((error: any)=>{
+      console.error(error)
+      return Promise.resolve(false)
+    })
+  }
+
+  public GetMails(folderPath: string, requestKind: number): Promise<Nullable<MailHeader[]>> {
+    return RNMailModule.GetMails({folder: folderPath, requestKind}).then((result: MailHeader[])=>{
       return Promise.resolve(result)
     }).catch((error: any)=>{
       console.error(error)
-      return Promise.reject(error)
+      return Promise.resolve(null)
     })
   }
 
-  public GetFullMail(mail: MailHeader): Promise<Mail> {
-    return RNMailModule.GetFullMail(mail).then((result: Mail)=>{
-      return Promise.resolve(result);
+  public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Nullable<Mail[]>> {
+    return RNMailModule.GetMail({folderPath, requestKind, messageUID}).then((result: Mail[])=>{
+      return Promise.resolve(result)
     }).catch((error: any)=>{
       console.error(error)
-      return Promise.reject(error)
+      return Promise.resolve(null)
     })
-  }
-
-  public GetMailAttachments(mail: MailHeader): Promise<Attachment[]>{
-    return RNMailModule.GetMailAttachments(mail).then((result: Attachment[])=>{
-      return Promise.resolve(result);
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.reject(error)
-    })
-  }
-
-  public DownloadAttachment(mail: MailHeader, attachment: Attachment): Promise<Attachment>{
-    return RNMailModule.DownloadAttachment(mail, attachment).then((result: Attachment)=>{
-      return Promise.resolve(result);
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.reject(error)
-    })
-  }
-
-  public MoveMail(mail: Mail, destination: Folder): Promise<void>{
-    return RNMailModule.MoveMail(mail, destination).then(()=>{
-      return Promise.resolve();
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.reject(error)
-    })
-  }
-
-  public DeleteMail(mail: Mail, permanent: boolean = false): Promise<void>{
-    //return permanent ? this.PermanentDeleteMail(mail) : this.MoveMail(mail, this.mFolders.get('TRASH')!)
-  }
-
-  public PermanentDeleteMail(mail: Mail): Promise<void>{
-    return RNMailModule.DeleteMail(mail).then(()=>{
-      return Promise.resolve();
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.reject(error)
-    })
-  }
-
-  public SendMail(mail: Mail){
-    
   }
 
 }
-
-
-export default Session;
