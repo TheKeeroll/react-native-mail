@@ -104,9 +104,8 @@ export interface Folder {
 }
 export interface ServerConfiguration {
     hostname: string;
-    smtpPort: number;
-    imapPort: number;
-    connectiontype: ConnectionType;
+    port: number;
+    connectionType: ConnectionType;
     authType: AuthType;
     checkCertificate: boolean;
 }
