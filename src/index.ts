@@ -16,72 +16,44 @@ class MailInstance{
     this.mSMTPConfig = smtpCfg
   }
 
-  public Login(creds: UserCredentials): Promise<boolean> {
+  public Login(creds: UserCredentials): Promise<void> {
     this.mUserCredentials = creds
     return RNMailModule.Login(creds).then(()=>{
-      return Promise.resolve(true)
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.resolve(false)
+      return Promise.resolve()
     })
   }
 
-  public FetchFolders(): Promise<Nullable<Folder[]>> {
-    return RNMailModule.GetMails().then((folders: Folder[])=>{
+  public FetchFolders(): Promise<Folder[]> {
+    return RNMailModule.GetFolders().then((folders: Folder[])=>{
       this.mFolders = folders
       for(let folder of this.mFolders)
         folder.name = decode_imap_utf7(folder.path)
       return Promise.resolve(folders)
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.resolve(null)
     })
   }
 
   public GetFolders() : Promise<Nullable<Folder[]>> {
     if(this.mFolders) return Promise.resolve(this.mFolders)
-    return this.GetFolders()
+    return this.FetchFolders()
   }
 
 
-  public CreateFolder(folderName: string): Promise<boolean> {
+  public CreateFolder(folderName: string): Promise<void> {
     return RNMailModule.CreateFolder(folderName).then(()=>{
       return this.FetchFolders().then(()=>{
-        return Promise.resolve(true)
+        return Promise.resolve()
       })
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.resolve(false)
     })
   }
 
-  public RenameFolder(folderName: string, folderNewName: string): Promise<boolean> {
-    return RNMailModule.RenameFolder({old: folderName, 'new': folderNewName}).then(()=>{
-      return this.FetchFolders().then(()=>{
-        return Promise.resolve(true)
-      })
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.resolve(false)
-    })
+  public RenameFolder(folderName: string, folderNewName: string): Promise<void> {
+    return RNMailModule.RenameFolder({old: folderName, 'new': folderNewName})
   }
-
-  public GetMails(folderPath: string, requestKind: number): Promise<Nullable<MailHeader[]>> {
-    return RNMailModule.GetMails({folder: folderPath, requestKind}).then((result: MailHeader[])=>{
-      return Promise.resolve(result)
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.resolve(null)
-    })
+  public GetMails(folderPath: string, requestKind: number): Promise<MailHeader[]> {
+    return RNMailModule.GetMails({folder: folderPath, requestKind})
   }
-
-  public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Nullable<Mail[]>> {
-    return RNMailModule.GetMail({folderPath, requestKind, messageUID}).then((result: Mail[])=>{
-      return Promise.resolve(result)
-    }).catch((error: any)=>{
-      console.error(error)
-      return Promise.resolve(null)
-    })
+  public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Mail[]> {
+    return RNMailModule.GetMail({folderPath, requestKind, messageUID})
   }
 
 }
