@@ -57,3 +57,5 @@ class MailInstance{
   }
 
 }
+
+export default MailInstance
