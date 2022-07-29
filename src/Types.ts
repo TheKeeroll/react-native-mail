@@ -115,12 +115,11 @@ export interface Folder{
 }
 
 export interface ServerConfiguration{
-  hostname: string
-  smtpPort: number
-  imapPort: number
-  connectiontype: ConnectionType
-  authType: AuthType
-  checkCertificate: boolean
+    hostname: string
+    port: number
+    connectionType: ConnectionType
+    authType: AuthType
+    checkCertificate: boolean
 }
 
 export interface UserCredentials{
