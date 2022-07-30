@@ -54,8 +54,8 @@ class MailInstance{
   public RenameFolder(folderName: string, folderNewName: string): Promise<void> {
     return RNMailModule.RenameFolder({old: folderName, 'new': folderNewName})
   }
-  public GetMails(folder: Folder, requestKind: number): Promise<MailHeader[]> {
-    return RNMailModule.GetMails({path: folder.path, requestKind: requestKind})
+  public GetMails(folder: Folder, requestKind: number, lastLocalUID?: number): Promise<MailHeader[]> {
+    return RNMailModule.GetMails({path: folder.path, requestKind: requestKind, lastUID: lastLocalUID})
   }
   public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Mail[]> {
     return RNMailModule.GetMail({folderPath, requestKind, messageUID})
