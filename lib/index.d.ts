@@ -4,7 +4,9 @@ declare class MailInstance {
     private readonly mSMTPConfig;
     private mUserCredentials;
     private mFolders;
+    private mLoggedIn;
     constructor(imapCfg: ServerConfiguration, smtpCfg: ServerConfiguration);
+    get LoggedIn(): boolean;
     Login(creds: UserCredentials): Promise<void>;
     FetchFolders(): Promise<Folder[]>;
     GetFolders(): Promise<Nullable<Folder[]>>;
