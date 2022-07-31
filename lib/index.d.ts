@@ -13,6 +13,6 @@ declare class MailInstance {
     CreateFolder(folderName: string): Promise<void>;
     RenameFolder(folderName: string, folderNewName: string): Promise<void>;
     GetMails(folder: Folder, requestKind: number, lastLocalUID?: number): Promise<MailHeader[]>;
-    GetMail(folderPath: string, requestKind: number, messageUID: number): Promise<Mail[]>;
+    GetMail(folderPath: string, requestKind: number, messageUID: number): Promise<Mail>;
 }
 export default MailInstance;
