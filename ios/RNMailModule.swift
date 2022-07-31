@@ -261,7 +261,7 @@ class RNMailModule: NSObject {
     }
     
     @objc public func GetMails(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
-        let folder: String = (params["folder"] as! String);
+        let folder: String = (params["path"] as! String);
         let requestKind = params["requestKind"] as! Int;
         //let lastUID = params["lastUID"] == nil ? nil : (params["lastUID"] as! String);
         let uidRange = MCOIndexSet(range: MCORangeMake(1, UINT64_MAX));
