@@ -281,7 +281,7 @@ class RNMailModule: NSObject {
                     dict["from"] = ((message as! MCOIMAPMessage).header.from.displayName != nil) ?
                     (message as! MCOIMAPMessage).header.from.displayName : "";
                     dict["subject"] = (message as! MCOIMAPMessage).header.subject;
-                    dict["date"] = (message as! MCOIMAPMessage).header.date;
+                    dict["date"] = dict["date"] = Int((message as! MCOIMAPMessage).header.date.timeIntervalSince1970);
                     dict["attachmentsCount"] = ((message as! MCOIMAPMessage).attachments != nil ) ?
                     (message as! MCOIMAPMessage).attachments().count : 0;
                     messages.append(dict);

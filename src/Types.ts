@@ -81,7 +81,7 @@ export interface UIDRange{
 
 export interface MailHeader{
     attachmentCount: number
-    date: Nullable<String|Date>
+    date: Number
     flags: Nullable<number>
     from: string
     subject: string
@@ -90,7 +90,7 @@ export interface MailHeader{
 
 export interface Mail{
     header: MailHeader
-    attachments: Nullable<Map<String, Attachment>>
+    attachments: any
     from: Nullable<{
         mailbox: string
         name: string
