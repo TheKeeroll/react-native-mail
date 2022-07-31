@@ -81,7 +81,7 @@ export interface UIDRange{
 
 export interface MailHeader{
     attachmentCount: number
-    date: Number
+    date: number
     flags: Nullable<number>
     from: string
     subject: string
@@ -102,8 +102,8 @@ export interface Mail{
 }
 
 export interface Attachment{
-    encoding: Nullable<String>
-    fileName: String
+    encoding: Nullable<string>
+    fileName: string
     size: number
     uid: number
 }
