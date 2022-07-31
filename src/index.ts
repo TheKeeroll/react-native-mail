@@ -10,15 +10,20 @@ class MailInstance{
   private readonly mSMTPConfig: ServerConfiguration
   private mUserCredentials: Nullable<UserCredentials> = null
   private mFolders: Folder[] = []
+  private mLoggedIn = false
 
   public constructor(imapCfg: ServerConfiguration, smtpCfg: ServerConfiguration) {
     this.mIMAPConfig = imapCfg
     this.mSMTPConfig = smtpCfg
+    RNMailModule.SetServerConfig(this.mIMAPConfig, this.mSMTPConfig)
   }
+
+  public get LoggedIn(){return this.mLoggedIn}
 
   public Login(creds: UserCredentials): Promise<void> {
     this.mUserCredentials = creds
     return RNMailModule.Login(creds).then(()=>{
+      this.mLoggedIn = true
       return Promise.resolve()
     })
   }
@@ -33,7 +38,7 @@ class MailInstance{
   }
 
   public GetFolders() : Promise<Nullable<Folder[]>> {
-    if(this.mFolders) return Promise.resolve(this.mFolders)
+    if(this.mFolders.length) return Promise.resolve(this.mFolders)
     return this.FetchFolders()
   }
 
@@ -49,11 +54,11 @@ class MailInstance{
   public RenameFolder(folderName: string, folderNewName: string): Promise<void> {
     return RNMailModule.RenameFolder({old: folderName, 'new': folderNewName})
   }
-  public GetMails(folderPath: string, requestKind: number): Promise<MailHeader[]> {
-    return RNMailModule.GetMails({folder: folderPath, requestKind})
+  public GetMails(folder: Folder, requestKind: number, lastLocalUID?: number): Promise<MailHeader[]> {
+    return RNMailModule.GetMails({path: folder.path, requestKind: requestKind, lastUID: lastLocalUID})
   }
-  public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Mail[]> {
-    return RNMailModule.GetMail({folderPath, requestKind, messageUID})
+  public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Mail> {
+    return RNMailModule.GetMail({folder: folderPath, requestKind, messageUID})
   }
 
 }
