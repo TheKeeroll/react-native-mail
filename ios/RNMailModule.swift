@@ -263,8 +263,8 @@ class RNMailModule: NSObject {
     @objc public func GetMails(_ params: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
         let folder: String = (params["path"] as! String);
         let requestKind = params["requestKind"] as! Int;
-        //let lastUID = params["lastUID"] == nil ? nil : (params["lastUID"] as! String);
-        let uidRange = MCOIndexSet(range: MCORangeMake(1, UINT64_MAX));
+        let lastUID = params["lastUID"] == nil ? 1 : (params["lastUID"] as! UInt64);
+        let uidRange = MCOIndexSet(range: MCORangeMake(lastUID, UINT64_MAX));
         if let fetchOperation = mIMAPSession.fetchMessagesOperation(withFolder: folder, requestKind: MCOIMAPMessagesRequestKind(rawValue: requestKind), uids: uidRange){
             fetchOperation.start(){(error, messagesRaw, vanishedMessages)->() in
                 if(error != nil) {
