@@ -88,8 +88,8 @@ export interface Mail {
     }>;
     htmlBody: Nullable<string>;
     plainBody: Nullable<string>;
-    inlines: any;
-    recipients: Nullable<string[]>;
+    inlines: any[];
+    recipients: any[];
 }
 export interface Attachment {
     encoding: Nullable<string>;
