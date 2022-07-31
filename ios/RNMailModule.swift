@@ -216,6 +216,7 @@ class RNMailModule: NSObject {
                     for part in message.attachments() {
                         var attachmentData: [String: Any] = [:];
                         let path = NSURL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]).appendingPathComponent((part as AnyObject).filename);
+                        
                         attachmentData["fileName"] = path!.absoluteString;
                         attachmentData["size"] = (part as AnyObject).size as Int;
                         attachmentData["encoding"] = (part as AnyObject).encoding;
@@ -278,10 +279,11 @@ class RNMailModule: NSObject {
                     var dict:[String:Any] = [:];
                     dict["uid"] = (message as! MCOIMAPMessage).uid;
                     dict["flags"] = (message as! MCOIMAPMessage).flags;
-                    dict["from"] = ((message as! MCOIMAPMessage).header.from.displayName != nil) ?
+                    dict["from"] = ((message as! MCOIMAPMessage).header.from
+                                        .displayName != nil) ?
                     (message as! MCOIMAPMessage).header.from.displayName : "";
                     dict["subject"] = (message as! MCOIMAPMessage).header.subject;
-                    dict["date"] = dict["date"] = Int((message as! MCOIMAPMessage).header.date.timeIntervalSince1970);
+                    dict["date"] = Int((message as! MCOIMAPMessage).header.date.timeIntervalSince1970);
                     dict["attachmentsCount"] = ((message as! MCOIMAPMessage).attachments != nil ) ?
                     (message as! MCOIMAPMessage).attachments().count : 0;
                     messages.append(dict);
@@ -291,6 +293,71 @@ class RNMailModule: NSObject {
             }
         } else {
             reject("GetMails", "Failed to create fetchMessagesOperation()", nil);
+            return;
+        }
+    }
+    
+    @objc public func GetAttachment(_ attachemntInfo: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) -> Void{
+        let fileName = (attachemntInfo["fileName"] as! String);
+        let folderPath = (attachemntInfo["path"] as! String);
+        let messageUID = (attachemntInfo["uid"] as! UInt64);
+        let uid = MCOIndexSet(index: messageUID);
+        let requestKind = MCOIMAPMessagesRequestKind.headers.rawValue | MCOIMAPMessagesRequestKind.structure.rawValue | MCOIMAPMessagesRequestKind.internalDate.rawValue | MCOIMAPMessagesRequestKind.headerSubject.rawValue | MCOIMAPMessagesRequestKind.flags.rawValue;
+        //MCOIMAPMessagesRequestKind.headers.rawValue;
+        
+        
+        if let getMessageOp = mIMAPSession.fetchMessagesOperation(withFolder: folderPath, requestKind: MCOIMAPMessagesRequestKind(rawValue: requestKind), uids: uid){
+            getMessageOp.start(){(error, fetchedMessages, vanished)->() in
+                if(error != nil) {
+                    reject("GetAttachment", error.debugDescription, error);
+                    return;
+                }
+                let message = fetchedMessages![0] as! MCOIMAPMessage;
+                if let getFullMessageOp = self.mIMAPSession.fetchMessageOperation(withFolder: folderPath, uid: message.uid){
+                    getFullMessageOp.start(){(error,data)->() in
+                        if(error != nil) {
+                            reject("GetAttachment", error.debugDescription, error);
+                            return;
+                        }
+                        if((message.attachments().count > 0)){
+                            var i = message.attachments().count - 1;
+                            //let i = 0;
+                            while (i > 0) {
+                                let part = message.attachments()[i] as! MCOIMAPPart;
+                                if(part.filename == fileName){
+                                    let savePath = NSURL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]).appendingPathComponent((part as AnyObject).filename);
+                                    var result: [String:String] = [:];
+                                    result["filePath"] = savePath!.absoluteString;
+                                    if let attachmentOp = self.mIMAPSession.fetchMessageAttachmentOperation(withFolder: folderPath, uid: message.uid, partID: part.partID, encoding: part.encoding){
+                                        attachmentOp.start(){(error, data) ->() in
+                                            if(error != nil) {
+                                                reject("GetAttachment", error.debugDescription, error);
+                                                return;
+                                            }
+                                            //do{
+                                            try! data!.write(to: savePath!.absoluteURL);
+                                                resolve(0);
+                                            return;
+                                            //} catch error {
+                                            //    reject("GetAttachment", error.debugDescription, error);
+                                           // }
+                                        }
+                                    } else {
+                                        reject("GetAttachment", "Failed to create attachmentOp()", nil);
+                                        return;
+                                    }
+                                }
+                                i -= 1;
+                            }
+                        }
+                    }
+                } else {
+                    reject("GetAttachment", "Failed to create getFullMessageOp()", nil);
+                    return;
+                }
+            }
+        } else {
+            reject("GetAttachment", "Failed to create getMessageOp()", nil);
             return;
         }
     }
