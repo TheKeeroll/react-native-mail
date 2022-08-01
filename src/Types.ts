@@ -108,7 +108,8 @@ export interface Mail{
 }
 export interface AttachemtnBuild{
     url: string,
-    fileName: string
+    fileName: string,
+    type: string
 }
 export interface MailBuild{
     from: MailUser,

@@ -406,9 +406,12 @@ class RNMailModule: NSObject {
             for attachment in attachments {
                 //do{
                     //let data: NSData = try NSData(contentsOfFile: );
-                let att = MCOAttachment(contentsOfFile: attachment["url"]!);
-                builder.addAttachment(att);
-                    
+                //let att = MCOAttachment(contentsOfFile: attachment["url"]!);
+                //builder.addAttachment(att);
+                  var att = MCOAttachment(contentsOfFile: attachment["url"]!)!;
+                att.filename = attachment["fileName"];
+                att.mimeType = attachment["type"];
+                builder.addAttachment(att);  
                 //}catch let error as NSError{
                 //    reject("SendMail", error.debugDescription, error);
                 //    return;
