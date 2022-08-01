@@ -15,5 +15,6 @@ RCT_EXTERN_METHOD(CreateFolder: (NSString)folderName resolver: (RCTPromiseResolv
 RCT_EXTERN_METHOD(RenameFolder: (NSString)folderNames resolver:(RCTPromiseResolveBlock)resolve rejecter: (RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(GetMail: (NSDictionary)mailInfo resolver: (RCTPromiseResolveBlock)resolve rejecter: (RCTPromiseRejectBlock)reject)
 RCT_EXTERN_METHOD(GetMails: (NSDictionary)params resolver: (RCTPromiseResolveBlock)resolve rejecter: (RCTPromiseRejectBlock)reject)
-RCT_EXTERN_METHOD(GetAttachment: (NSDictionary)attachemntInfo resolver: (RCTPromiseResolveBlock)resolve rejecter: (RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(GetAttachment: (NSDictionary)attachmentInfo resolver: (RCTPromiseResolveBlock)resolve rejecter: (RCTPromiseRejectBlock)reject)
+RCT_EXTERN_METHOD(SendMail: (NSDictionary)mail resolver: (RCTPromiseResolveBlock)resolve rejecter: (RCTPromiseRejectBlock)reject)
 @end

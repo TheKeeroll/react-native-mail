@@ -1,4 +1,4 @@
-import { Folder, Mail, MailHeader, ServerConfiguration, UserCredentials, Nullable } from './Types';
+import { Attachment, Folder, Mail, MailHeader, ServerConfiguration, UserCredentials, Nullable, MailBuild } from './Types';
 declare class MailInstance {
     private readonly mIMAPConfig;
     private readonly mSMTPConfig;
@@ -14,6 +14,7 @@ declare class MailInstance {
     RenameFolder(folderName: string, folderNewName: string): Promise<void>;
     GetMails(folder: Folder, requestKind: number, lastLocalUID?: number): Promise<MailHeader[]>;
     GetMail(folderPath: string, requestKind: number, messageUID: number): Promise<Mail>;
-    GetAttachment(fileName: string, folderPath: string, messageUID: number, attachmentUID: number, encoding: number): Promise<void>;
+    GetAttachment(folderPath: string, messageUID: number, attachment: Attachment): Promise<void>;
+    SendMail(mail: MailBuild): Promise<void>;
 }
 export default MailInstance;

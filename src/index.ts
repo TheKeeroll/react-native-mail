@@ -1,6 +1,6 @@
 import * as React from 'react'
 import { NativeModules } from 'react-native'
-import {Attachment, Folder, Mail, MailHeader, UIDRange, ServerConfiguration, UserCredentials, Nullable} from './Types'
+import {Attachment, Folder, Mail, MailHeader, UIDRange, ServerConfiguration, UserCredentials, Nullable, MailBuild} from './Types'
 import { decode_imap_utf7 } from './utf7/utf7'
 
 const {RNMailModule} = NativeModules
@@ -60,12 +60,16 @@ class MailInstance{
   public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Mail> {
     return RNMailModule.GetMail({folder: folderPath, requestKind, messageUID})
   }
-  public GetAttachment(fileName: string, folderPath: string, messageUID: number, attachmentUID: number, encoding: number): Promise<void> {
+  public GetAttachment(folderPath: string, messageUID: number, attachment: Attachment): Promise<void> {
+    const fileName = decodeURI(attachment.fileName.split('/').reverse()[0].trim())
+    const {encoding, partID} = attachment
     return RNMailModule.GetAttachment({
-      fileName, path: folderPath, messageUID, attachmentUID, encoding
+      fileName, path: folderPath, messageUID, attachmentUID: partID, encoding
     })
   }
-
+  public SendMail(mail: MailBuild): Promise<void>{
+    return RNMailModule.SendMail(mail);
+  }
 }
 
 export default MailInstance

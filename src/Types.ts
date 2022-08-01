@@ -82,27 +82,48 @@ export interface UIDRange{
 export interface MailHeader{
     attachmentCount: number
     date: number
-    flags: Nullable<number>
+    flags: number
     from: string
     subject: string
     uid: number
 }
 
+export interface Recipients{
+    [key: string]: string
+}
+
+export interface MailUser{
+    mailbox: string
+    name: string
+}
+
 export interface Mail{
     header: MailHeader
     attachments: any
-    from: Nullable<{
-        mailbox: string
-        name: string
-    }>
-    htmlBody: Nullable<string>
-    plainBody: Nullable<string>
-    inlines: any[]
-    recipients: any[]
+    from: MailUser
+    htmlBody: string
+    plainBody: string
+    inlines: any
+    recipients: Recipients
+}
+export interface AttachemtnBuild{
+    url: string,
+    fileName: string
+}
+export interface MailBuild{
+    from: MailUser,
+    to: MailUser[],
+    cc: MailUser[],
+    bcc: MailUser[],
+    subject: string,
+    body: string,
+    attachments: AttachemtnBuild[],
+    origID: Nullable<number>,
+    origFolderPath: Nullable<string>
 }
 
 export interface Attachment{
-    encoding: string
+    encoding: number
     fileName: string
     size: number
     uid: number

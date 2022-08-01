@@ -224,7 +224,7 @@ class RNMailModule: NSObject {
                         
                         attachmentData["fileName"] = path!.absoluteString;
                         attachmentData["size"] = (part as AnyObject).size as Int;
-                        attachmentData["encoding"] = (part as AnyObject).encoding as String;
+                        attachmentData["encoding"] = ((part as AnyObject).encoding as MCOEncoding).rawValue;
                         attachmentData["uid"] = (part as AnyObject).uniqueID;
                         attachmentsData[(part as AnyObject).partID] = attachmentData;
                     }
@@ -307,7 +307,7 @@ class RNMailModule: NSObject {
         let attachmentUID = attachemntInfo["attachmentUID"] as! String;
         let folder = attachemntInfo["path"] as! String;
         let messageUID = attachemntInfo["messageUID"] as! UInt32;
-        let encoding = attachmentInfo["encoding"] as! UInt32;
+        let encoding = attachemntInfo["encoding"] as! UInt32;
         
         if let getMessageOp = mIMAPSession.fetchMessageOperation(withFolder: folder, uid: messageUID){
             getMessageOp.start() {(error,data)->() in
@@ -317,16 +317,16 @@ class RNMailModule: NSObject {
                 }
                 
                 let parsedMsg = MCOMessageParser(data: data!)!;
-                if let downloadAttachmentOp = mIMAPSession.fetchMessageAttachmentOperation(withFolder: folder, uid: messageUID, partID: attachmentUID, encoding: MCOEncoding(rawValue: encoding)!){
+                if let downloadAttachmentOp = self.mIMAPSession.fetchMessageAttachmentOperation(withFolder: folder, uid: messageUID, partID: attachmentUID, encoding: MCOEncoding(rawValue: Int(encoding))!){
                     downloadAttachmentOp.start(){(error,data)->() in
                         if(error != nil || data == nil) {
                             reject("GetAttachment", error.debugDescription, error);
                             return;
                         }
-                        let path = NSURL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]).appendingPathComponent((part as AnyObject).filename);
+                        let path = NSURL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]).appendingPathComponent(fileName)!;
                         do{
                             try data?.write(to: path);
-                            resolve(result);
+                            resolve(path.absoluteString);
                             return;
                         }catch let error as NSError{
                             reject("GetAttachment", error.debugDescription, error);
@@ -347,6 +347,106 @@ class RNMailModule: NSObject {
         }
     }
     
+    private func SendMail(mail: MCOMessageBuilder, res: RCTPromiseResolveBlock, rej: RCTPromiseRejectBlock) -> Void{
+        if let sendOp = mSMTPSession.sendOperation(with: mail.data()){
+            sendOp.start(){(error)->() in
+                if(error != nil){
+                    rej("SendMail", error.debugDescription, error);
+                    return;
+                }
+                res(0);
+                return;
+            }
+        } else {
+            rej("SendMail", "Failed to create sendOp()", nil);
+            return;
+        }
+    }
+    
+    @objc public func SendMail(_ mail: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) -> Void {
+        let from = mail["from"] as! [String:String];
+        let to: [[String:String]] = mail["to"] as! [[String:String]];
+        let cc: [[String:String]] = mail["cc"] as! [[String:String]];
+        let bcc: [[String:String]] = mail["bcc"] as! [[String:String]];
+        let subject = mail["subject"] as! String;
+        let body: String = mail["body"] as! String;
+        let attachments: [[String:String]] = mail["attachments"] as! [[String:String]];
+        let origID = mail["origID"] == nil ? nil : mail["origID"] as! UInt32;
+        let origFolderPath = mail["origFolderPath"] == nil ? nil : mail["origFolderPath"] as! String;
+
+        let builder = MCOMessageBuilder();
+        
+        builder.header.from = MCOAddress(displayName: from["name"]!, mailbox: from["mailbox"]!);
+        
+        var recipients: [MCOAddress] = [];
+        for recipient in to{
+            recipients.append(MCOAddress(displayName: recipient["name"], mailbox: recipient["mailbox"]));
+        }
+        builder.header.to = recipients;
+        
+        if(!cc.isEmpty){
+            var ccc: [MCOAddress] = [];
+            for item in cc {
+                ccc.append(MCOAddress(displayName: item["name"], mailbox: item["mailbox"]));
+            }
+            builder.header.cc = ccc;
+        }
+        
+        if(!bcc.isEmpty){
+            var bccs: [MCOAddress] = [];
+            for item in bcc {
+                bccs.append(MCOAddress(displayName: item["name"], mailbox: item["mailbox"]));
+            }
+            builder.header.cc = bccs;
+        }
+        builder.header.subject = subject;
+        builder.htmlBody = body;
+        
+        if(!attachments.isEmpty){
+            for attachment in attachments {
+                //do{
+                    //let data: NSData = try NSData(contentsOfFile: );
+                let att = MCOAttachment(contentsOfFile: attachment["url"]!);
+                builder.addAttachment(att);
+                    
+                //}catch let error as NSError{
+                //    reject("SendMail", error.debugDescription, error);
+                //    return;
+                //}
+            }
+        }
+        if(origID == nil){
+            SendMail(mail: builder, res: resolve, rej: reject);
+        } else {
+            if(origFolderPath == nil){
+                reject("SendMail", "origFolderPath is nil while origID isn't", nil);
+                return;
+            }
+            if let fetchOrigOp = mIMAPSession.fetchMessageOperation(withFolder: origFolderPath!, uid: origID!){
+                fetchOrigOp.start(){(error,data)->() in
+                    if(error != nil) {
+                        reject("SendMail", error.debugDescription, error);
+                        return;
+                    }
+                    
+                    
+                    let parser = MCOMessageParser(data: data)!;
+                    var refs: [Any] = parser.header.references;
+                    if(parser.header.messageID != nil){
+                        builder.header.inReplyTo = [parser.header.messageID as Any];
+                        refs.append(parser.header.messageID);
+                    }
+                    builder.header.references = refs;
+                    
+                    SendMail(mail: builder, res: resolve, rej: reject);
+                }
+            }else{
+                reject("SendMail", "Failed to create getMessageOp()", nil);
+                return;
+            }
+        }
+        
+    }
   @objc
   static public func requiresMainQueueSetup() -> Bool {
     return true
