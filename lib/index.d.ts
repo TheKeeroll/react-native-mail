@@ -14,6 +14,6 @@ declare class MailInstance {
     RenameFolder(folderName: string, folderNewName: string): Promise<void>;
     GetMails(folder: Folder, requestKind: number, lastLocalUID?: number): Promise<MailHeader[]>;
     GetMail(folderPath: string, requestKind: number, messageUID: number): Promise<Mail>;
-    GetAttachment(fileName: string, folderPath: string, messageUID: number, attachmentUID: number): Promise<void>;
+    GetAttachment(fileName: string, folderPath: string, messageUID: number, attachmentUID: number, encoding: number): Promise<void>;
 }
 export default MailInstance;

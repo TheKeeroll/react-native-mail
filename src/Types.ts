@@ -102,7 +102,7 @@ export interface Mail{
 }
 
 export interface Attachment{
-    encoding: Nullable<string>
+    encoding: string
     fileName: string
     size: number
     uid: number

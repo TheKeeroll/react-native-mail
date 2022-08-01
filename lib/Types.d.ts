@@ -92,10 +92,11 @@ export interface Mail {
     recipients: any[];
 }
 export interface Attachment {
-    encoding: Nullable<string>;
+    encoding: string;
     fileName: string;
     size: number;
     uid: number;
+    partID: number;
 }
 export interface Folder {
     flags: FolderFlags;
