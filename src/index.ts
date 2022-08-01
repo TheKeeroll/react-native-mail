@@ -60,9 +60,9 @@ class MailInstance{
   public GetMail(folderPath: string, requestKind: number, messageUID: number) : Promise<Mail> {
     return RNMailModule.GetMail({folder: folderPath, requestKind, messageUID})
   }
-  public GetAttachment(fileName: string, folderPath: string, messageUID: number): Promise<void> {
+  public GetAttachment(fileName: string, folderPath: string, messageUID: number, attachmentUID: number): Promise<void> {
     return RNMailModule.GetAttachment({
-      fileName, path: folderPath, uid: messageUID
+      fileName, path: folderPath, messageUID, attachmentUID
     })
   }
 

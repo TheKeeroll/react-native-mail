@@ -7,11 +7,14 @@
 
 import Foundation
 import UIKit
-
-
+import Accelerate
 
 @objc(RNMailModule)
 class RNMailModule: NSObject {
+    
+    enum RNMailCoreError: Error{
+        case RunTimeError(String)
+    }
     
     struct ServerConfiguration{
         var hostname: String = "";
@@ -41,6 +44,8 @@ class RNMailModule: NSObject {
         }
         init(){}
     }
+    
+    
     
     @objc private var mIMAPSession = MCOIMAPSession();
     @objc private var mSMTPSession = MCOSMTPSession();
@@ -298,63 +303,59 @@ class RNMailModule: NSObject {
     }
     
     @objc public func GetAttachment(_ attachemntInfo: NSDictionary, resolver resolve: @escaping RCTPromiseResolveBlock, rejecter reject: @escaping RCTPromiseRejectBlock) -> Void{
-        let fileName = (attachemntInfo["fileName"] as! String);
-        let folderPath = (attachemntInfo["path"] as! String);
-        let messageUID = (attachemntInfo["uid"] as! UInt64);
-        let uid = MCOIndexSet(index: messageUID);
-        let requestKind = MCOIMAPMessagesRequestKind.headers.rawValue | MCOIMAPMessagesRequestKind.structure.rawValue | MCOIMAPMessagesRequestKind.internalDate.rawValue | MCOIMAPMessagesRequestKind.headerSubject.rawValue | MCOIMAPMessagesRequestKind.flags.rawValue;
-        //MCOIMAPMessagesRequestKind.headers.rawValue;
+        let fileName = attachemntInfo["fileName"] as! String;
+        let attachmentUID = attachemntInfo["attachmentUID"] as! UInt32;
+        let folder = attachemntInfo["path"] as! String;
+        let messageUID = attachemntInfo["messageUID"] as! UInt32;
         
-        
-        if let getMessageOp = mIMAPSession.fetchMessagesOperation(withFolder: folderPath, requestKind: MCOIMAPMessagesRequestKind(rawValue: requestKind), uids: uid){
-            getMessageOp.start(){(error, fetchedMessages, vanished)->() in
-                if(error != nil) {
+        if let getMessageOp = mIMAPSession.fetchMessageOperation(withFolder: folder, uid: messageUID){
+            getMessageOp.start() {(error,data)->() in
+                if(error != nil || data == nil) {
                     reject("GetAttachment", error.debugDescription, error);
                     return;
                 }
-                let message = fetchedMessages![0] as! MCOIMAPMessage;
-                if let getFullMessageOp = self.mIMAPSession.fetchMessageOperation(withFolder: folderPath, uid: message.uid){
-                    getFullMessageOp.start(){(error,data)->() in
-                        if(error != nil) {
-                            reject("GetAttachment", error.debugDescription, error);
-                            return;
-                        }
-                        if((message.attachments().count > 0)){
-                            var i = message.attachments().count - 1;
-                            //let i = 0;
-                            while (i > 0) {
-                                let part = message.attachments()[i] as! MCOIMAPPart;
-                                if(part.filename == fileName){
-                                    let savePath = NSURL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]).appendingPathComponent((part as AnyObject).filename);
-                                    var result: [String:String] = [:];
-                                    result["filePath"] = savePath!.absoluteString;
-                                    if let attachmentOp = self.mIMAPSession.fetchMessageAttachmentOperation(withFolder: folderPath, uid: message.uid, partID: part.partID, encoding: part.encoding){
-                                        attachmentOp.start(){(error, data) ->() in
-                                            if(error != nil) {
-                                                reject("GetAttachment", error.debugDescription, error);
-                                                return;
-                                            }
-                                            //do{
-                                            try! data!.write(to: savePath!.absoluteURL);
-                                                resolve(0);
-                                            return;
-                                            //} catch error {
-                                            //    reject("GetAttachment", error.debugDescription, error);
-                                           // }
-                                        }
-                                    } else {
-                                        reject("GetAttachment", "Failed to create attachmentOp()", nil);
+                
+                let parsedMsg = MCOMessageParser(data: data!)!;
+                
+                if(parsedMsg.attachments() != nil && parsedMsg.attachments().count > 0){
+                    
+                    var i = parsedMsg.attachments().count;
+                    while(i > 0){
+                        let part = MCOIMAPPart(coder: parsedMsg.attachments()[i] as! NSCoder)!;
+                        if(part.isAttachment
+                           && UInt32(part.partID) == attachmentUID
+                           /*&& part.filename == fileName*/){
+                            let path = NSURL(fileURLWithPath: NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true)[0]).appendingPathComponent(part.filename)!;
+                            var result: [String: String] = [:];
+                            result["path"] = path.path;
+                            if let downloadAttachmentOp = self.mIMAPSession.fetchMessageAttachmentOperation(withFolder: folder, uid: messageUID, partID: part.partID, encoding: part.encoding){
+                                downloadAttachmentOp.start(){(error, data)->() in
+                                    if(error != nil) {
+                                        reject("GetAttachment", error.debugDescription, error);
+                                        return;
+                                    }
+                                    do{
+                                        try data?.write(to: path);
+                                        resolve(result);
+                                        return;
+                                    }catch let error as NSError{
+                                        reject("GetAttachment", error.debugDescription, error);
                                         return;
                                     }
                                 }
-                                i -= 1;
+                            } else {
+                                reject("GetAttachment", "Failed to create downloadAttachmentOp()", nil);
+                                return;
                             }
                         }
+                        i -= 1;
                     }
+                    
                 } else {
-                    reject("GetAttachment", "Failed to create getFullMessageOp()", nil);
+                    reject("GetAttachment", "No attachments found", nil);
                     return;
                 }
+                
             }
         } else {
             reject("GetAttachment", "Failed to create getMessageOp()", nil);
