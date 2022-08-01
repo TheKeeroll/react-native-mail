@@ -347,7 +347,7 @@ class RNMailModule: NSObject {
         }
     }
     
-    private func _SendMail(mail: MCOMessageBuilder, res: RCTPromiseResolveBlock, rej: RCTPromiseRejectBlock) -> Void{
+    private func _SendMail(mail: MCOMessageBuilder, res: @escaping RCTPromiseResolveBlock, rej: @escaping RCTPromiseRejectBlock) -> Void{
         if let sendOp = mSMTPSession.sendOperation(with: mail.data()){
             sendOp.start(){(error)->() in
                 if(error != nil){
