@@ -371,8 +371,8 @@ class RNMailModule: NSObject {
         let subject = mail["subject"] as! String;
         let body: String = mail["body"] as! String;
         let attachments: [[String:String]] = mail["attachments"] as! [[String:String]];
-        let origID = mail["origID"] == nil ? nil : mail["origID"] as! UInt32;
-        let origFolderPath = mail["origFolderPath"] == nil ? nil : mail["origFolderPath"] as! String;
+        let origID = mail["origID"] as? UInt32;
+        let origFolderPath = mail["origFolderPath"] as? String;
 
         let builder = MCOMessageBuilder();
         
