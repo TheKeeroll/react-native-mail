@@ -438,7 +438,7 @@ class RNMailModule: NSObject {
                     }
                     builder.header.references = refs;
                     
-                    _SendMail(mail: builder, res: resolve, rej: reject);
+                    self._SendMail(mail: builder, res: resolve, rej: reject);
                 }
             }else{
                 reject("SendMail", "Failed to create getMessageOp()", nil);
