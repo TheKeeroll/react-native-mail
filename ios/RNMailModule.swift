@@ -347,7 +347,7 @@ class RNMailModule: NSObject {
         }
     }
     
-    private func SendMail(mail: MCOMessageBuilder, res: RCTPromiseResolveBlock, rej: RCTPromiseRejectBlock) -> Void{
+    private func _SendMail(mail: MCOMessageBuilder, res: RCTPromiseResolveBlock, rej: RCTPromiseRejectBlock) -> Void{
         if let sendOp = mSMTPSession.sendOperation(with: mail.data()){
             sendOp.start(){(error)->() in
                 if(error != nil){
@@ -416,7 +416,7 @@ class RNMailModule: NSObject {
             }
         }
         if(origID == nil){
-            SendMail(mail: builder, res: resolve, rej: reject);
+            _SendMail(mail: builder, res: resolve, rej: reject);
         } else {
             if(origFolderPath == nil){
                 reject("SendMail", "origFolderPath is nil while origID isn't", nil);
@@ -438,7 +438,7 @@ class RNMailModule: NSObject {
                     }
                     builder.header.references = refs;
                     
-                    SendMail(mail: builder, res: resolve, rej: reject);
+                    _SendMail(mail: builder, res: resolve, rej: reject);
                 }
             }else{
                 reject("SendMail", "Failed to create getMessageOp()", nil);
