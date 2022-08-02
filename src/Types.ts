@@ -130,7 +130,7 @@ export interface Attachment{
     fileName: string
     size: number
     uid: number
-    partID: number
+    partID: string
 }
 
 export interface Folder{
