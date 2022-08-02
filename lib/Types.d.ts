@@ -88,7 +88,9 @@ export interface MailUser {
 }
 export interface Mail {
     header: MailHeader;
-    attachments: Attachment[];
+    attachments: {
+        [key: string]: Attachment;
+    };
     from: MailUser;
     htmlBody: string;
     plainBody: string;
