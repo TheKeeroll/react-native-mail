@@ -285,7 +285,8 @@ class RNMailModule: NSObject {
                     dict["uid"] = (message as! MCOIMAPMessage).uid;
                     dict["flags"] = (message as! MCOIMAPMessage).flags;
                     dict["from"] = ((message as! MCOIMAPMessage).header.from != nil) ?
-                    (message as! MCOIMAPMessage).header.from : "";
+                    ["mailbox": (message as! MCOIMAPMessage).header.from.mailbox,
+                     "name": (message as! MCOIMAPMessage).header.from.displayName] : ["mailbox": "" , "name:" :""];
                     dict["subject"] = (message as! MCOIMAPMessage).header.subject;
                     dict["date"] = Int((message as! MCOIMAPMessage).header.date.timeIntervalSince1970);
                     dict["attachmentsCount"] = ((message as! MCOIMAPMessage).attachments != nil ) ?
