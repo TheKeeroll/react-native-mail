@@ -284,9 +284,8 @@ class RNMailModule: NSObject {
                     var dict:[String:Any] = [:];
                     dict["uid"] = (message as! MCOIMAPMessage).uid;
                     dict["flags"] = (message as! MCOIMAPMessage).flags;
-                    dict["from"] = ((message as! MCOIMAPMessage).header.from
-                                        .displayName != nil) ?
-                    (message as! MCOIMAPMessage).header.from.displayName : "";
+                    dict["from"] = ((message as! MCOIMAPMessage).header.from != nil) ?
+                    (message as! MCOIMAPMessage).header.from : "";
                     dict["subject"] = (message as! MCOIMAPMessage).header.subject;
                     dict["date"] = Int((message as! MCOIMAPMessage).header.date.timeIntervalSince1970);
                     dict["attachmentsCount"] = ((message as! MCOIMAPMessage).attachments != nil ) ?
@@ -408,10 +407,20 @@ class RNMailModule: NSObject {
                     //let data: NSData = try NSData(contentsOfFile: );
                 //let att = MCOAttachment(contentsOfFile: attachment["url"]!);
                 //builder.addAttachment(att);
-                  var att = MCOAttachment(contentsOfFile: attachment["url"]!)!;
-                att.filename = attachment["fileName"];
-                att.mimeType = attachment["type"];
-                builder.addAttachment(att);  
+                
+                let path =  attachment["url"]!
+                if FileManager.default.fileExists(atPath: path){
+                    
+                    let content = FileManager.default.contents(atPath: path);
+                    let att = MCOAttachment(data: content, filename: attachment["fileName"]!)!;
+                    //att.data = fm;
+                    att.filename = attachment["fileName"];
+                    att.mimeType = attachment["type"];
+                    builder.addAttachment(att);
+                } else {
+                    reject  ("Send mail", "Specified file not found", nil);
+                    return;
+                }
                 //}catch let error as NSError{
                 //    reject("SendMail", error.debugDescription, error);
                 //    return;
@@ -434,12 +443,17 @@ class RNMailModule: NSObject {
                     
                     
                     let parser = MCOMessageParser(data: data)!;
-                    var refs: [Any] = parser.header.references;
+                    
                     if(parser.header.messageID != nil){
                         builder.header.inReplyTo = [parser.header.messageID as Any];
-                        refs.append(parser.header.messageID);
+                        
                     }
-                    builder.header.references = refs;
+                    if(parser.header.references != nil){
+                        var refs: [Any] = parser.header.references;
+                        refs.append(parser.header.messageID);
+                        builder.header.references = refs;
+                    }
+                    
                     
                     self._SendMail(mail: builder, res: resolve, rej: reject);
                 }
