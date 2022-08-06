@@ -38,4 +38,5 @@ repositories {
 
 dependencies {
     implementation 'com.facebook.react:react-native:+'
+    compile project(":mailcore2-android-4")
 }
