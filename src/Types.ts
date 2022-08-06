@@ -83,7 +83,7 @@ export interface MailHeader{
     attachmentCount: number
     date: number
     flags: number
-    from: string
+    from: MailUser
     subject: string
     uid: number
 }
