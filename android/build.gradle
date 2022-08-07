@@ -44,17 +44,14 @@ android {
 repositories {
     google()
     mavenCentral()
-}
-allprojects {
-    repositories {
-        jcenter()
-        flatDir {
-            dirs 'mailcore2'
-        }
+    flatDir {
+        dirs 'libs'
     }
 }
+
+
 dependencies {
     implementation 'com.facebook.react:react-native:+'
-    implementation (name: 'mailcore2', ext: 'aar')
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.5'
+    implementation (name:'mailcore2', ext:'aar')
 }
