@@ -1,9 +1,6 @@
 package com.thekeeroll.reactnativemail
 
-import com.facebook.react.bridge.Promise
-import com.facebook.react.bridge.ReactApplicationContext
-import com.facebook.react.bridge.ReactContextBaseJavaModule
-import com.facebook.react.bridge.ReactMethod
+import com.facebook.react.bridge.*
 import com.libmailcore.*
 import java.io.File
 import java.io.FileOutputStream
@@ -23,28 +20,29 @@ class RNMailModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
         }
     }
 
-    @ReactMethod
-    fun SetServerConfig(imap: MutableMap<String, Any>, smtp: MutableMap<String,String>){
-        mIMAPSession.setHostname(imap["hostname"] as String)
-        mIMAPSession.setPort(imap["port"] as Int)
-        mIMAPSession.setAuthType(imap["authType"] as Int)
-        mIMAPSession.setConnectionType(imap["connectionType"] as Int)
-        mIMAPSession.isCheckCertificateEnabled = imap["checkCertificate"] as Boolean
 
-        mSMTPSession.setHostname(smtp["hostname"] as String)
-        mSMTPSession.setPort(smtp["port"] as Int)
+    @ReactMethod
+    fun SetServerConfig(imap: ReadableMap, smtp: ReadableMap){
+        mIMAPSession.setHostname(imap.getString("hostname") as String)
+        mIMAPSession.setPort(imap.getInt("port") as Int)
+        mIMAPSession.setAuthType(imap.getInt("authType") as Int)
+        mIMAPSession.setConnectionType(imap.getInt("connectionType") as Int)
+        mIMAPSession.isCheckCertificateEnabled = imap.getBoolean("checkCertificate") as Boolean
+
+        mSMTPSession.setHostname(smtp.getString("hostname") as String)
+        mSMTPSession.setPort(smtp.getInt("port") as Int)
         mSMTPSession.setAuthType(AuthType.AuthTypeSASLLogin/*smtp["authType"] as Int*/)
         mSMTPSession.setConnectionType(ConnectionType.ConnectionTypeStartTLS/*smtp["connectionType"] as Int*/)
-        mSMTPSession.isCheckCertificateEnabled = smtp["checkCertificate"] as Boolean
+        mSMTPSession.isCheckCertificateEnabled = smtp.getBoolean("checkCertificate") as Boolean
     }
 
     @ReactMethod
-    fun Login(credentials: MutableMap<String, String>, promise: Promise){
-        mIMAPSession.setUsername(credentials["username"])
-        mIMAPSession.setPassword(credentials["password"])
+    fun Login(credentials: ReadableMap, promise: Promise){
+        mIMAPSession.setUsername(credentials.getString("username"))
+        mIMAPSession.setPassword(credentials.getString("password"))
 
-        mSMTPSession.setUsername(credentials["username"])
-        mSMTPSession.setPassword(credentials["password"])
+        mSMTPSession.setUsername(credentials.getString("username"))
+        mSMTPSession.setPassword(credentials.getString("password"))
 
         val checkIMAP = mIMAPSession.checkAccountOperation()
         val checkSMTP = mSMTPSession.loginOperation();
@@ -80,10 +78,10 @@ class RNMailModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
     }
 
     @ReactMethod
-    public fun GetMail(mailInfo: MutableMap<String, Any>, promise: Promise){
-        val folder = mailInfo["folder"] as String
-        val messageUID = (IndexSet::indexSetWithIndex)(mailInfo["messageUID"] as Long);
-        val requestKind = mailInfo["requestKind"] as Int;
+    public fun GetMail(mailInfo: ReadableMap, promise: Promise){
+        val folder = mailInfo.getString("folder")
+        val messageUID = (IndexSet::indexSetWithIndex)(mailInfo.getInt("messageUID") as Long);
+        val requestKind = mailInfo.getInt("requestKind") as Int;
 
         val getMailOp = mIMAPSession.fetchMessagesByUIDOperation(folder, requestKind, messageUID)
         getMailOp.start(object: OperationResultHandler(promise){
@@ -150,10 +148,10 @@ class RNMailModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
     }
 
     @ReactMethod
-    public fun GetMails(params: Map<String,Any>, promise: Promise){
-        val folder = params["path"] as String
-        val requestKind = params["requestKind"] as Int
-        val lastUID = if(params["lastUID"] == null) 1 else params["lastUID"] as Long
+    public fun GetMails(params: ReadableMap, promise: Promise){
+        val folder = params.getString("path") as String
+        val requestKind = params.getString("requestKind") as Int
+        val lastUID = if(params.getInt("lastUID") == null) 1 else params.getInt("lastUID") as Long
         val uidRange = (IndexSet::indexSetWithRange)(Range(lastUID, Long.MAX_VALUE))
 
         val getMailsOp = mIMAPSession.fetchMessagesByUIDOperation(folder, requestKind, uidRange)
@@ -180,12 +178,12 @@ class RNMailModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
     }
 
     @ReactMethod
-    public fun GetAttachment(attachemntInfo: Map<String, Any>, promise: Promise){
-        val fileName = attachemntInfo["fileName"] as String
-        val attachmentUID = attachemntInfo["attachmentUID"] as String
-        val folder = attachemntInfo["path"] as String
-        val messageUID = attachemntInfo["messageUID"] as Long
-        val encoding = attachemntInfo["encoding"] as Int
+    public fun GetAttachment(attachemntInfo: ReadableMap, promise: Promise){
+        val fileName = attachemntInfo.getString("fileName") as String
+        val attachmentUID = attachemntInfo.getString("attachmentUID") as String
+        val folder = attachemntInfo.getString("path") as String
+        val messageUID = attachemntInfo.getInt("messageUID") as Long
+        val encoding = attachemntInfo.getInt("encoding") as Int
 
         val getAttachmentOp = mIMAPSession.fetchMessageAttachmentByUIDOperation(folder, messageUID, attachmentUID, encoding, true)
         getAttachmentOp.start(object: OperationResultHandler(promise){
