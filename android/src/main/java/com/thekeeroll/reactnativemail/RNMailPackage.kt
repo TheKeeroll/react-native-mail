@@ -5,7 +5,7 @@ import com.facebook.react.bridge.NativeModule
 import com.facebook.react.bridge.ReactApplicationContext
 import com.facebook.react.uimanager.ViewManager
 
-class RNMailPackage : ReactPackage {
+abstract class RNMailPackage : ReactPackage {
 
     override fun createViewManagers(reactContext: ReactApplicationContext):
             MutableList<ViewManager<*, *>> {
