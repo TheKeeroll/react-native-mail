@@ -53,5 +53,5 @@ repositories {
 dependencies {
     implementation 'com.facebook.react:react-native:+'
     coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:1.0.5'
-    implementation (name:'mailcore2', ext:'aar')
+    implementation project(":mailcore2")
 }
