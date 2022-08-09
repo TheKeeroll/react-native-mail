@@ -12,7 +12,7 @@ export enum MessagesRequestKind{
     GMAIL_MESSAGE_ID = 128,
     GMAIL_THREAD_ID = 256,
     EXTRA_HEADERS = 512,
-    SIZE = 1024
+    SIZE = 1024 //TODO make bitwise
 }
    
 export enum RequestFlags{
