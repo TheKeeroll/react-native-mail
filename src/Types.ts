@@ -17,8 +17,8 @@ export enum MessagesRequestKind{
    
 export enum RequestFlags{
     ADD = 0,
-    REMOVE = 1,
-    SET = 2
+    REMOVE = 1 << 0,
+    SET = 1 << 1
 }
 
 export enum AuthType{
